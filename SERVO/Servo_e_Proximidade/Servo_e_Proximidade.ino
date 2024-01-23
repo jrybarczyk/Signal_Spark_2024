@@ -1,0 +1,126 @@
+ //NOME ACOPLAR SERVO MOTOR E ULTRASOM
+//CURSO SIGNAL SPARK
+//AUTOR JOSE LUIZ RYBARCZYK FILHO
+ // INCLUI A BIBLIOTECA ARDUINO PARA FUNCIONALIDADES BASICAS
+ #include <Arduino.h>
+
+// DEFINICAO DOS PINOS UTILIZADOS
+
+// PINO DE TRIGGER (ENVIO DE SINAL ULTRASSONICO)
+int TRIGGER = 12; 
+
+// PINO DE ECHO (RECEBIMENTO DO SINAL ULTRASSOPNICO)
+int ECHO = 13;    
+
+// PINO DE CONTROLE DO SERVO MOTOR
+int SERVO = 9;    
+
+// VARIAVEIS PARA O SENSOR ULTRASSONICO
+
+// VARIAVEIS PARA ARMAZENAR DURACAO DO ECO E A DISTANCIA CALCULADA
+long duracao, distancia;       
+
+// DISTANCIA PARA ACIONAMENTO DA CANCELA
+int Dist_Aciona = 5;  
+
+// FUNCAO PARA LER A DISTANCIA MEDIDA PELO SENSOR ULTRASSONICO
+
+long Ler_Distancia() {
+
+// ZERA O PINO DE TRIGGER
+  digitalWrite(TRIGGER, LOW); 
+
+// PEQUENA PAUSA PARA ESTABILIZAR O SINAL
+  delayMicroseconds(2);
+
+// ENVIA UM PULSO ALTO           
+  digitalWrite(TRIGGER, HIGH);
+
+// MANTEM O PULSO POR 10 MICROSEGUNDOS 
+  delayMicroseconds(10);           
+
+// RETORNA O PINO DE TRIGGER PARA BAIXO
+  digitalWrite(TRIGGER, LOW);  
+
+// LE O TEMPO DE DURACAO DO ECO
+  duracao = pulseIn(ECHO, HIGH); 
+
+// CONVERTE A DURACAO EM DISTANCIA
+  distancia = duracao * 0.034 / 2;
+
+// RETORNA O VALOR DA DISTANCIA
+  return distancia;                  
+}
+
+// FUNCAO PARA MOVER O SERVO MOTOR
+void Mover_Servo(int angulo) {
+
+// MAPEIA O ANGULO PARA O VALOR DE PULSO CORRESPONDENTE
+  int pulso = map(angulo, 0, 180, 544, 2400); 
+
+// ATIVA O PINO DO SERVO
+  digitalWrite(SERVO, HIGH); 
+
+// MANTEM O PULSO PELO TEMPO NECESSARIO
+  delayMicroseconds(pulso);      
+
+// DESATIVA O PINO DO SERVO
+  digitalWrite(SERVO, LOW);  
+
+// COMPLETA O PERIODO DE 20MS
+  delay(20 - pulso / 1000);      
+}
+
+// FUNCAO SETUP, EXECUTADA UMA VEZ NA INICIALIZACAO DO ARDUINO
+void setup() {
+
+// DEFINE O PINO DE TRIGGER COMO SAIDA
+  pinMode(TRIGGER, OUTPUT);
+
+// DEFINE O PINO DE ECHO COMO ENTRADA
+  pinMode(ECHO, INPUT);
+
+ // DEFINE O PINO DO SERVO COMO SAIDA
+  pinMode(SERVO, OUTPUT); 
+
+// MOVE O SERVO PARA A POSICAO INICIAL (0 GRAUS)
+  Mover_Servo(0);                
+}
+
+// FUNCAO LOOP, EXECUTADA REPETIDAMENTE ENQUANTO O ARDUINO ESTIVER LIGADO
+void loop() {
+
+// LE A DISTANCIA MEDIDA PELO SENSOR ULTRASSONICO
+  distancia = Ler_Distancia(); 
+
+// VERIFICA SE A DISTANCIA E MENOR OU IGUAL A DISTANCIA DE ACIONAMENTO
+  if (distancia <= Dist_Aciona) { 
+
+// AGUARDA 800 MILISSEGUNDOS
+    delay(800);   
+
+// MOVE O SERVO PARA 120 GRAUS                         
+    Mover_Servo(120);                       
+
+
+    do {
+// AGUARDA 200 MILISSEGUNDOS
+      delay(200);                      
+
+// LE NOVAMENTE A DISTANCIA
+      distancia = Ler_Distancia();
+
+// REPETE ENQUANTO A DISTANCIA FOR MENOR OU IGUAL A DE ACIONAMENTO    
+    } while (distancia <= Dist_Aciona); 
+
+
+// AGUARDA 3000 MILISSEGUNDOS (3 SEGUNDOS)
+    delay(3000);
+// RETORNA O SERVO PARA 0 GRAUS              
+    Mover_Servo(0);  
+// AGUARDA 2000 MILISSEGUNDOS (2 SEGUNDOS)                   
+    delay(2000);                       
+  }
+// AGUARDA 200 MILISSEGUNDOS
+  delay(200); 
+}
